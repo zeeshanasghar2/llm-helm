@@ -1,0 +1,45 @@
+{{- if .Values.litellm.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openwebui-stack.fullname" . }}-litellm
+  labels:
+    {{- include "openwebui-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: litellm
+spec:
+  replicas: {{ .Values.litellm.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openwebui-stack.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: litellm
+  template:
+    metadata:
+      labels:
+        {{- include "openwebui-stack.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: litellm
+    spec:
+      containers:
+        - name: litellm
+          image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
+          args:
+            - "--config"
+            - "/app/config.yaml"
+          ports:
+            - containerPort: {{ .Values.litellm.service.port }}
+          env:
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "openwebui-stack.fullname" . }}-secrets
+                  key: LITELLM_MASTER_KEY
+          volumeMounts:
+            - name: litellm-config-volume
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          resources:
+            {{- toYaml .Values.litellm.resources | nindent 12 }}
+      volumes:
+        - name: litellm-config-volume
+          configMap:
+            name: {{ include "openwebui-stack.fullname" . }}-litellm-config
+{{- end }}

@@ -1,0 +1,90 @@
+replicaCount: 1
+
+openwebui:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/open-webui/open-webui
+    pullPolicy: IfNotPresent
+    tag: main
+  service:
+    type: LoadBalancer
+    port: 80
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  # -- Liveness and readiness probe settings for OpenWebUI
+  probes:
+    initialDelaySeconds: 300
+    periodSeconds: 30
+    timeoutSeconds: 15
+    failureThreshold: 5
+
+# -- LiteLLM configuration
+litellm:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/berriai/litellm
+    pullPolicy: IfNotPresent
+    tag: main-stable
+  service:
+    type: ClusterIP
+    port: 4000
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# -- Ollama configuration
+ollama:
+  image:
+    repository: ollama/ollama
+    pullPolicy: IfNotPresent
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 11434
+  # -- The model to pull in the init container before starting the server
+  model: "qwen2:7b"
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+    limits:
+      cpu: "2"
+      memory: "8Gi"
+  initContainer:
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+  persistence:
+    enabled: true
+    size: 20Gi
+    # storageClassName: "" # Specify a storage class if needed
+
+# -- Secret values
+# It's strongly recommended to manage secrets outside of the default values.yaml.
+# Use --set, --set-string, or a separate, git-ignored values file (`-f secrets.yaml`).
+secrets:
+  # -- PostgreSQL database credentials
+  postgresql:
+    user: "your-user"
+    password: "your-password"
+    host: "your-host.postgres.database.azure.com"
+    port: "5432"
+    db: "openwebui"
+  # -- A persistent secret key for OpenWebUI session management
+  webuiSecretKey: "super-secure-and-random-secret-key"
+  # -- The master key to secure the LiteLLM proxy
+  litellmMasterKey: "secure-master-key"

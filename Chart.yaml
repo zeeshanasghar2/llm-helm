@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openwebui-stack
+description: A Helm chart for deploying a full AI stack with OpenWebUI, LiteLLM, and Ollama.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

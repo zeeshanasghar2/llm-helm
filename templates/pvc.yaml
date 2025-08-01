@@ -1,0 +1,18 @@
+{{- if .Values.ollama.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "openwebui-stack.fullname" . }}-ollama-pvc
+  labels:
+    {{- include "openwebui-stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.ollama.persistence.size }}
+  {{- if .Values.ollama.persistence.storageClassName }}
+  storageClassName: {{ .Values.ollama.persistence.storageClassName }}
+  {{- end }}
+{{- end }}
