@@ -4,16 +4,7 @@ metadata:
   name: kv-reader-sa
   namespace: default
   annotations:
-    azure.workload.identity/client-id: "97746289-72e0-4c20-a1a1-ef10727b31cd"
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kv-reader-sa
-  namespace: default
-  annotations:
-    azure.workload.identity/client-id: "97746289-72e0-4c20-a1a1-ef10727b31cd"
+    azure.workload.identity/client-id: "5e36c3f5-4aa4-465d-a1e3-e749301d36b5"
 
 ---
 
