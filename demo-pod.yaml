@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kv-reader-sa # Must match the name used in Step 1
+  namespace: default
+  # Add this annotation for Workload Identity
+  annotations:
+    azure.workload.identity/client-id: "97746289-72e0-4c20-a1a1-ef10727b31cd"
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: keyvault-demo-pod
+  namespace: default
+spec:
+  serviceAccountName: kv-reader-sa # Use the service account
+  containers:
+    # ===== Container 1: Demonstrates reading secrets as mounted files =====
+    - name: demo-container-files
+      image: nginx
+      volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      # This container will just run, allowing you to exec in and see the files.
+      
+    # ===== Container 2: Demonstrates using secrets as environment variables =====
+    - name: demo-container-env
+      image: busybox
+      # This command will print all environment variables and then wait.
+      command: ["/bin/sh", "-c", "echo '--- My Environment Variables ---' && printenv && echo '--- End Variables ---' && sleep 3600"]
+      envFrom:
+        # This injects all keys from the specified Kubernetes secret as environment variables.
+        # This secret is created by the SecretProviderClass from Step 2.
+        - secretRef:
+            name: postgres-db-credentials # Must match 'secretName' in SecretProviderClass
+  volumes:
+    - name: secrets-store-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kv-postgres" # Must match the name of your SecretProviderClass
