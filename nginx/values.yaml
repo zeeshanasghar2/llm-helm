@@ -1,0 +1,12 @@
+replicaCount: 1
+image: nginx:1.16.0
+servicePort: 80
+
+# Azure Key Vault Configuration for CSI Driver
+keyVault:
+  enabled: true
+  name: prod-llm-keyvault
+  secretName: litellm-master-key
+  envName: LITELLM_MASTER_KEY
+  # Azure tenant ID - you can get this with: az account show --query tenantId -o tsv
+  tenantId: "1a20a08a-cff0-479f-87e5-e4027d22cdbc" 
