@@ -28,18 +28,24 @@ spec:
             - containerPort: {{ .Values.litellm.service.port }}
           env:
             - name: LITELLM_MASTER_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "openwebui-stack.fullname" . }}-secrets
-                  key: LITELLM_MASTER_KEY
+              value: "$(cat /mnt/secrets-store/LITELLM_MASTER_KEY)"
           volumeMounts:
             - name: litellm-config-volume
               mountPath: /app/config.yaml
               subPath: config.yaml
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
           resources:
             {{- toYaml .Values.litellm.resources | nindent 12 }}
       volumes:
         - name: litellm-config-volume
           configMap:
             name: {{ include "openwebui-stack.fullname" . }}-litellm-config
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kv-secrets"
 {{- end }}
