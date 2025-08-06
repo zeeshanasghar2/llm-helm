@@ -17,6 +17,7 @@ spec:
         {{- include "openwebui-stack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: openwebui
     spec:
+      serviceAccountName: {{ include "openwebui-stack.fullname" . }}-sa
       containers:
         - name: openwebui
           image: "{{ .Values.openwebui.image.repository }}:{{ .Values.openwebui.image.tag }}"

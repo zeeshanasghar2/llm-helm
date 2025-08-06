@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/zeeshanasghar2/llm-helm
-    targetRevision: HEAD
+    targetRevision: helm-with-CSI-secret-store
     path: .
     helm:
       valueFiles:

@@ -15,6 +15,10 @@ This Helm chart deploys a complete AI stack including:
 - Azure Workload Identity configured
 - Secret Store CSI Driver installed
 
+## Namespace Configuration
+
+This chart is configured to deploy in the `openwebui-stack` namespace. The SecretProviderClass is also configured to use this namespace. If you need to deploy to a different namespace, update both the ArgoCD application configuration and the SecretProviderClass namespace.
+
 ## Azure Key Vault Integration
 
 This chart uses Azure Key Vault for secret management via the Secret Store CSI Driver. The following secrets must be stored in your Azure Key Vault:
@@ -57,9 +61,34 @@ This chart uses Azure Key Vault for secret management via the Secret Store CSI D
    ```
 
 4. **Configure Workload Identity:**
-   - Create a managed identity
-   - Assign Key Vault permissions to the managed identity
-   - Update the `clientID` and `tenantId` in `secret-store-provider.yaml`
+   
+   **Option A: Use the setup script (Recommended)**
+   ```bash
+   # Edit the script with your resource group and cluster details
+   chmod +x setup-workload-identity.sh
+   ./setup-workload-identity.sh
+   ```
+   
+   **Option B: Manual setup**
+   ```bash
+   # 1. Create managed identity
+   az identity create --resource-group <your-rg> --name llm-workload-identity
+   
+   # 2. Get AKS OIDC issuer
+   OIDC_ISSUER=$(az aks show --resource-group <your-rg> --name <your-cluster> --query oidcIssuerProfile.issuerUrl -o tsv)
+   
+   # 3. Create federated identity credential
+   az identity federated-credential create \
+     --name "llm-federated-credential" \
+     --identity-name llm-workload-identity \
+     --resource-group <your-rg> \
+     --issuer $OIDC_ISSUER \
+     --subject "system:serviceaccount:openwebui-stack:openwebui-stack-sa" \
+     --audience api://AzureADTokenExchange
+   
+   # 4. Assign Key Vault permissions
+   az keyvault set-policy --name dev-llm-keyvault --secret-permissions get list --object-id <managed-identity-principal-id>
+   ```
 
 ## Installation
 
@@ -70,7 +99,7 @@ This chart uses Azure Key Vault for secret management via the Secret Store CSI D
 
 2. **Install the Helm chart:**
    ```bash
-   helm install llm-stack . --namespace default
+   helm install llm-stack . --namespace openwebui-stack --create-namespace
    ```
 
 ## Configuration
@@ -93,7 +122,7 @@ The chart can be configured using the `values.yaml` file. Key configuration opti
 
 1. **Check SecretProviderClass status:**
    ```bash
-   kubectl get secretproviderclass azure-kv-secrets -o yaml
+   kubectl get secretproviderclass azure-kv-secrets -n openwebui-stack -o yaml
    ```
 
 2. **Check pod events:**

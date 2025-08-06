@@ -18,6 +18,7 @@ spec:
         {{- include "openwebui-stack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: litellm
     spec:
+      serviceAccountName: {{ include "openwebui-stack.fullname" . }}-sa
       containers:
         - name: litellm
           image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
